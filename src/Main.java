@@ -8,8 +8,9 @@ public class Main{
     public static void main(String[] args) {
         Swing swing = new Swing();
         swing.startup();
-        // FIX UP UI INPUT AND LOGIC FOR METRONOME
-        // ask for help setting up a github
+        // FIX UP UI INPUT
+        // prevent more than 3 ints being typed before it performs floating point overflow error
+
     }
 
 }

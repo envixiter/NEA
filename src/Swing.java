@@ -12,14 +12,14 @@ public class Swing extends JFrame implements ActionListener{
     private Thread metronomeThread;
 
 
-    public void startup(){
+    public void startup() {
         //initialise all frames here
         // coordinates start from top left corner
 
 
         // main page
         JFrame frame = new JFrame();
-
+        frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         JButton metronomeToggle = new JButton();
         metronomeToggle.setBounds(100, 100, 20, 20);
 
@@ -39,26 +39,29 @@ public class Swing extends JFrame implements ActionListener{
         BackButton.setBounds(100, 100, 20, 20);
         JButton MetronomeEnabled = new JButton();
         MetronomeEnabled.setText("Start Metronome");
-        MetronomeEnabled.setBounds(400,300,100,40);
+        MetronomeEnabled.setBounds(400, 300, 150, 40);
         JLabel MetLabel = new JLabel();
         MetLabel.setText("Toggle Metronome");
         JLabel BackLabel = new JLabel();
         BackLabel.setBounds(100, 120, 100, 40);
         BackLabel.setText("Back");
 
-        // test
+        // bpm input
         NumberFormat format = NumberFormat.getIntegerInstance();
         format.setGroupingUsed(false);
         NumberFormatter numberFormatter = new NumberFormatter(format);
         numberFormatter.setValueClass(Integer.class);
-        numberFormatter.setMinimum(0);
-        numberFormatter.setAllowsInvalid(false);
+        numberFormatter.setAllowsInvalid(true);
         numberFormatter.setCommitsOnValidEdit(true);
         JFormattedTextField positiveIntField = new JFormattedTextField(numberFormatter);
+        JLabel inputLabel = new JLabel("Input a BPM");
+        inputLabel.setBounds(200, 320, 90, 20);
         positiveIntField.setColumns(10);
-        positiveIntField.setBounds(200,350,50,50);
+        positiveIntField.setBounds(200, 350, 50, 50);
         positiveIntField.setFocusLostBehavior(JFormattedTextField.COMMIT_OR_REVERT);
 
+
+        Metframe.add(inputLabel);
         Metframe.add(MetLabel);
         Metframe.add(MetronomeEnabled);
         Metframe.add(BackButton);
@@ -80,15 +83,12 @@ public class Swing extends JFrame implements ActionListener{
             if (!metronomeActive) {
                 Object value = positiveIntField.getValue();
                 System.out.println("Metronome started at " + value + " BPM");
-                if(value == null){
-                    JOptionPane.showMessageDialog(null, "Invalid BPM!", "Error", JOptionPane.ERROR_MESSAGE);
-                }
-
-                else{
-                    if((Integer) value < 20|(Integer) value > 300){
+                if (value == null) {
+                    JOptionPane.showMessageDialog(null, "Invalid BPM/Data Type!  Try a positive integer", "Error", JOptionPane.ERROR_MESSAGE);
+                } else {
+                    if ((Integer) value < 20 | (Integer) value > 300) {
                         JOptionPane.showMessageDialog(null, "BPM must be between 20 and 300!", "Error", JOptionPane.ERROR_MESSAGE);
-                    }
-                    else{
+                    } else {
                         startMetronome((Integer) value);
                         MetronomeEnabled.setText("Stop Metronome");
                     }
@@ -106,13 +106,22 @@ public class Swing extends JFrame implements ActionListener{
             long interval = 60000L / bpm; // ms per beat
             double duration = 0.5; // seconds
             double frequency = 987.77 / 2; // Hz
-
+            int current = 0;
             while (metronomeActive) {
                 try {
-                    sinegenerator.generate(frequency, duration, 44100, 0.5);
+                    if(current == 0) {
+                        sinegenerator.generate(frequency * 2, duration, 44100, 0.5); // b5
+                    }
+                    else{
+                        sinegenerator.generate(frequency, duration, 44100, 0.5);
+                    }
+                    current ++;
+                    if(current == 4){
+                        current = 0; // reset loop
+                    }
                     System.out.println("Tick");
 
-                    // Sleep for the remainder of the beat
+                    // sleep for the remainder of the beat
                     Thread.sleep(interval);
                 } catch (LineUnavailableException e) {
                     e.printStackTrace();
