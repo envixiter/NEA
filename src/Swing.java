@@ -59,14 +59,12 @@ public class Swing extends JFrame implements ActionListener{
         positiveIntField.setBounds(200,350,50,50);
         positiveIntField.setFocusLostBehavior(JFormattedTextField.COMMIT_OR_REVERT);
 
-        // Add a button to read the field value
         Metframe.add(MetLabel);
         Metframe.add(MetronomeEnabled);
         Metframe.add(BackButton);
         Metframe.add(BackLabel);
         Metframe.setSize(700, 800);
         Metframe.setLayout(null);
-        Metframe.setVisible(true);
         Metframe.add(positiveIntField);
 
 
@@ -82,8 +80,19 @@ public class Swing extends JFrame implements ActionListener{
             if (!metronomeActive) {
                 Object value = positiveIntField.getValue();
                 System.out.println("Metronome started at " + value + " BPM");
-                startMetronome((Integer) value);
-                MetronomeEnabled.setText("Stop Metronome");
+                if(value == null){
+                    JOptionPane.showMessageDialog(null, "Invalid BPM!", "Error", JOptionPane.ERROR_MESSAGE);
+                }
+
+                else{
+                    if((Integer) value < 20|(Integer) value > 300){
+                        JOptionPane.showMessageDialog(null, "BPM must be between 20 and 300!", "Error", JOptionPane.ERROR_MESSAGE);
+                    }
+                    else{
+                        startMetronome((Integer) value);
+                        MetronomeEnabled.setText("Stop Metronome");
+                    }
+                }
             } else {
                 stopMetronome();
                 MetronomeEnabled.setText("Start Metronome");
@@ -94,24 +103,27 @@ public class Swing extends JFrame implements ActionListener{
     private void startMetronome(int bpm) {
         metronomeActive = true;
         metronomeThread = new Thread(() -> {
-            long interval = 6000L / bpm;
-            double duration = 0.5;
-            interval = (long) (interval - duration);
+            long interval = 60000L / bpm; // ms per beat
+            double duration = 0.5; // seconds
+            double frequency = 987.77 / 2; // Hz
 
             while (metronomeActive) {
-                double b4 = 987.77 / 2;
                 try {
-                    sinegenerator.generate(b4,duration,44100, 0.5);
-                    System.out.println("b4");
-                } catch (LineUnavailableException e) {
-                    throw new RuntimeException(e);
-                }
-                try {
+                    sinegenerator.generate(frequency, duration, 44100, 0.5);
+                    System.out.println("Tick");
+
+                    // Sleep for the remainder of the beat
                     Thread.sleep(interval);
+                } catch (LineUnavailableException e) {
+                    e.printStackTrace();
+                    break;
                 } catch (InterruptedException ignored) {
+                    break;
                 }
             }
         });
+
+        metronomeThread.setDaemon(true); // optional: stops with app
         metronomeThread.start();
     }
     private void stopMetronome() {
