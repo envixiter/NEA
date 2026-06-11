@@ -6,7 +6,7 @@ import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 
 public class sinegenerator {
-        public static void generateAndPlaySineWave(double frequency, double duration,
+        public static void generate(double frequency, double duration,
                                                    float sampleRate, double amplitude)
                 throws LineUnavailableException {
             int totalSamples = (int) (duration * sampleRate);
@@ -24,19 +24,12 @@ public class sinegenerator {
                 audioBuffer[2 * i + 1] = sampleBytes[1];
             }
 
-            AudioFormat format = new AudioFormat(
-                    sampleRate,       // Sample rate
-                    16,               // Sample size in bits (16-bit)
-                    1,                // Channels (1 = mono, 2 = stereo)
-                    true,             // Signed (true for PCM)
-                    true              // Big-endian (required for 16-bit PCM)
-            );
+            AudioFormat format = new AudioFormat(sampleRate, 16, 1, true, true);
 
             try (SourceDataLine line = AudioSystem.getSourceDataLine(format)) {
                 line.open(format);
                 line.start();
                 line.write(audioBuffer, 0, audioBuffer.length);
-                System.out.println("sound played");
                 line.drain();
                 line.stop();
             }
